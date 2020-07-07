@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# REFLECT <a href='https://bioinformatics.mdanderson.org/reflect/'><img src='man/figures/logo.png' align="right" height="139" /></a>
+# REFLECT <a href='https://bioinformatics.mdanderson.org/reflect/'><img src='man/figures/logo_200px.png' align="right" height="139" /></a>
 
 ## Overview
 
