@@ -1,0 +1,208 @@
+---
+title: "Introduction to reflect"
+output: rmarkdown::html_vignette
+description: >
+  Start here if this is your first time using dplyr. You'll learn the basic   
+  philosophy, the most important data manipulation verbs, and the pipe, `%>%`, 
+  which allows you to combine multiple verbs together to solve real problems.
+vignette: >
+  %\VignetteIndexEntry{Introduction to dplyr}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r, echo = FALSE, message = FALSE}
+knitr::opts_chunk$set(collapse = T, comment = "#>")
+knitr::opts_chunk$set(fig.width = 4, fig.height = 4) 
+options(tibble.print_min = 4L, tibble.print_max = 4L)
+library(reflect)
+```
+
+REFLECT (REcurrent Features LEveraged for Combination Therapy) is to accelerate discovery of combination therapies tailored to multi-omic profiles of cancer patient cohorts with matching oncogenic features. REFLECT identifies co-actionable, co-occurring oncogenic alterations that are recurrent within patient cohorts using genomic, transcriptomic and phosphoproteomic data. 
+
+## Resources
+
+Two tools are available on REFLECT. The first one is a searchable online resource with interactive visualization tools for ~200 cohorts analyzed by the REFLECT pipeline (https://bioinformatics.mdanderson.org/reflect/). On the other hand, we provide an R package `reflect` for the generation of REFLECT signatures and matching combination therapies to patient cohorts with custom patient data. In this vignette, we introduce the R package `reflect`.
+
+## REFLECT's procedure for combination target selection
+
+REFLECT aims to go from precision targeted monotherapy, e.g., NCI-MATCH, MDACC Knowledge Base for Precision Oncology, etc., to combination therapy. 
+
+The combination targets are selected from a 2-step procedure. First, a cohort of patients is selected so that they all share an actionable biomarker, e.g., EGFR mutation. This biomarker may be chosen from well-established targets from precision targeted monotherapy, and it can be used as one of targets in combination therapy. Second, with omics data measured for this cohort, REFLECT employs an algorithm termed sparse hierarchical clustering to group subcohorts using a subset of discriminant features. If the discrimant features are recurrently occured within a subcohort, they represent significant events that may drive tumor genesis of patients of the subcohort. The recurrent events can be used as the second targets in combination therapy. By co-targeting both the biomarker and the recurrent events, patients may gain more therapeutic benefits. 
+
+## Data: egfr_data
+
+To explore the functionalities of `reflect`, we'll use the dataset `egfr_data`. This is a dataset of (phospho-)protein expressions measured by Reverse Phase Protein Arrays (RPPA) on a EGFR mutant cohort. 
+
+```{r}
+library(reflect)
+
+# data of a EGFR-mutant cohort
+egfr_data
+```
+
+The data `egfr_data` has 3 objects: 
+
+* (phospho-)protein expression Z scores (mat_value); 
+* annotations for each sample (df_sample); 
+* annotations for each feature (df_feature).
+
+```{r}
+mat_value <- egfr_data$mat_value
+df_sample <- egfr_data$df_sample
+df_feature <- egfr_data$df_feature
+```
+
+The cohort has 260 samples, including 238 TCGA patients from 22 cancer types and 22 cell lines from 8 lineages. For each sample, 179 (phospho-)protein expression Z scores are recorded as features. 
+
+```{r fig1, fig.height = 5, fig.width = 6}
+# plot tumor types of patients and cell lines
+plot_bar_tumortypes_stack_tcga_ccl(df_sample)
+```
+
+## Tunning parameter selection
+
+Before obtaining discriminant features, a tunning parameter, `wbound`, needs to be determined. It is a sparsity (or complexity) measure of the amount of discriminant features. In `reflect`, `wbound` is selected by maximizing `gap statistic`, which represents the extra information gained from clustering the data in comparison to the one gained from clustering randomly permutated data.
+
+The function `get_best_wbound` computes the gap statistic profile as the tunning parameter `wbound` varies. It also gives the optimal tunning parameter `best_wbound` based on the gap statitic profile. Note that running `get_best_wbound` is computationally costly. Here, to save computation time, we directly load a pre-computed result of the EGFR-mutant cohort. 
+
+```{r}
+# Calculate gap statistic profile along a sequence of wbound and get the best wbound
+# wbounds <- seq(1.1, sqrt(ncol(mat_value)), 100)
+# gapstat_bestwbound <- get_best_wbound(mat_value, wbounds = wbounds)
+
+# load a pre-computed result
+gapstat_bestwbound <- egfr_result$gapstat_bestwbound
+names(gapstat_bestwbound)
+
+# plot gap statistic profile as a function of the number of features
+# and gap statistic profile as a function of the tunning parameter wbound
+plot_gapstat(gapstat_bestwbound$df_gapstat, plot_tuning_parameter = TRUE)
+```
+
+The optimal `wbound` is chosen to be the most parsmonious `wbound` whose gap statistic is within the plateau close to the maximum gap statistic.
+
+```{r}
+# get the optimal wbound
+best_wbound <- gapstat_bestwbound$best_wbound
+best_wbound
+```
+
+## Sparse hierarchical clustering
+
+Now, we will take the optimal `wbound` to do sparse hierarchical clustering on the expression matrix using the function `sparse_hclust`. It generates a clustered cohort with discriminant features.
+
+```{r}
+# do sparse hierarchical clustering
+shc <- sparse_hclust(mat_value, best_wbound)
+
+# plot weights of discriminant features
+df_weight <- data.frame(Feature = names(shc$weight), 
+                        Weight = shc$weight)
+plot_bar_weights(df_weight)
+```
+
+Let's generate a heatmap using the function `plot_heatmap` to see how the clustered cohort look like. Before calling this function, we will first load pre-defined color sets for tumor types and sample variant categories. If these color sets are not provided, the function `plot_heatmap` uses its automatically generated color sets. Meanwhile, we will get the dendrogram from the sparse hierarchical clustering result. This dendrogram will be feed into the function `plot_heatmap` to show the hierarchy of clustered samples.
+
+```{r fig2, fig.height = 5, fig.width = 7.2}
+# load pre-defined color sets for tumor types
+df_tcga_color <- reflect_color$df_tcga_color
+df_ccl_color <- reflect_color$df_ccl_color
+
+# load pre-defined color sets for categories
+# here the categories are common variants and rare variants of samples
+df_category_color <- reflect_color$df_category_color
+
+# get the dendrogram generated by the sparse hierarchical clustering
+cluster_rows <- as.dendrogram(egfr_result$shc$hc)
+
+# plot heatmap
+plot_heatmap(mat_value,
+             df_sample = df_sample,
+             df_weight = df_weight,
+             cluster_rows = cluster_rows,
+             df_tcga_color = df_tcga_color,
+             df_ccl_color = df_ccl_color,
+             df_category_color = df_category_color,
+             category_name = "Variants",
+             show_row_names = FALSE)
+```
+
+As shown above, the column covariate bar is weights of discriminant features in descreasing order. The row covariate bars are showing tumor types and variant categories. The main heatmap is protein expression Z scores.
+
+Note that the algorithm has extracted 11 non-zero features, and set the rest of 168 features to have their weights as 0. The clustering is dominated by the most discriminant features, leading to 4 major clusters (subcohorts).
+
+## Recurrence P values
+
+With the clustered cohort, we will determine recurrence P values of discriminant features using the function `get_recur_pval`. We define an event to be recurrent if it occurs consecutively in a row within a subcohort. By event, we mean up alteration of an oncoprotein and down alteration of a tumor suppresor. In `reflect`, function score is used to characterize if a feature is an oncoprotein or a tumor suppresor. A function score is either 1 (activating) or -1 (inhibiting). In the dataset `egfr_data`,  function scores of features are annotated in `df_feature`. The function `get_recur_pval` takes both the clustered expression matrix and function scores to calculate recurrence P values.
+
+```{r}
+# get the expression matrix that has been clustered 
+mat_value_clustered <- shc$mat_value_clustered
+
+# calculate recurrence P values
+mat_recur_pval <- get_recur_pval(mat_value_clustered, df_feature)
+
+mat_recur_pval[1:3, 1:3]
+```
+
+## Recurrent and actionable features
+
+Now, each sample has a recurrence P value for each feature (`mat_recur_pval`). Also, in `df_feature`, there are annotations about whether the features are actionable. By combining the information of recurrence and actionability, we will use the function `get_recur_actionable_features` to extract significantly recurrent, i.e., `recurrence P value < pval_threshold`, and actionable features for each sample. If the actionability annotations in `df_feature` are not passed to the function, all features are considered to be actionable. 
+
+```{r}
+# get the expression matrix that has been clustered 
+recur_actionable <- get_recur_actionable_features(mat_value, 
+                                                  mat_recur_pval, 
+                                                  pval_threshold = 0.05,
+                                                  df_feature = df_feature)
+
+# recurrent and actionable features for each sample
+df_recur_actionable <- recur_actionable$df_recur_actionable
+df_recur_actionable[1:3, ]
+```
+
+In `df_recur_actionable`, the column `Feature_Value` refers to expression Z scores.
+
+## Co-altered, recurrent, and actionable targets
+
+Finally, we will nominate combination targets for each sample by combining the stratification biomarker that are shared among all patients of the cohort and the REFLECT-selected features that are recurrently altered within a subcohort. The status (e.g., mutation sites) of the stratification biomarker is included in `df_sample`, and the REFLECT-selected features are stored in `df_recur_actionable`. They are merged by the function `get_coaltered_targets`, generating combination targets for each sample.
+
+```{r}
+# recurrent and actionable features for each sample
+df_coaltered_targets <- get_coaltered_targets(df_sample, 
+                                              df_recur_actionable)
+df_coaltered_targets[1:3, ]
+```
+
+For each row (sample), a combination therapy is nominated. The first target comes from the column `Stratification`, corresponding to the status of actionable biomarkers that are shared among all samples of the cohort. The second target is from the column `Feature`, corresponding recurrent and actionable targets selected by REFLECT, and its expression Z score and recurrence P value are in the columns `Feature_Value` and `Feature_Recur_Pval`, respectively.
+
+## The reflect pipelines
+
+The reflect package provides a function `reflect_pipeline`, an interface of the end-to-end calculations from selecting the tunning parameter to getting co-altered combination targets.
+
+```{r}
+# run an end-to-end reflect pipeline
+# res <- reflect_pipeline(mat_value, df_sample, df_feature)
+# take take a long time, skip here
+
+# load a pre-computed result
+res <- egfr_result
+names(res)
+```
+
+Since tunning parameter selection is typically computationally costly and thus takes a long time, one may want to separate it from the other calculations. The reflect package provides an alternative way to run the pipeline. First, the optimal tunning parameter is determined using the function `get_best_wbound`, then all the other calculations can be run together using the function `reflect_pipeline2`. 
+
+```{r}
+# tunning parameter selection
+# gapstat_bestwbound <- get_best_wbound(mat_value)
+# take take a long time, skip here
+best_wbound <- gapstat_bestwbound$best_wbound
+
+# run a REFLECT pipeline given a precomputed tunning parameter
+res <- reflect_pipeline2(best_wbound, mat_value, df_sample, df_feature)
+names(res)
+```
+
+## Reference
+Li X., et al. (2020) Precision combination therapies from recurrent oncogenic co-alterations. doi: https://doi.org/10.1101/2020.06.03.132514
