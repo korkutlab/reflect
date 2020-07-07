@@ -49,13 +49,17 @@ You can learn more about them in `vignette("reflect")`.
 
 ## Installation
 
-reflect will be available from Bioconductor, you can install it by:
+<!-- reflect will be available from Bioconductor, you can install it by: -->
 
-``` r
-if (!requireNamespace("BiocManager", quietly=TRUE))
-    install.packages("BiocManager")
-BiocManager::install("reflect")
-```
+<!-- ```{r, eval = FALSE} -->
+
+<!-- if (!requireNamespace("BiocManager", quietly=TRUE)) -->
+
+<!--     install.packages("BiocManager") -->
+
+<!-- BiocManager::install("reflect") -->
+
+<!-- ``` -->
 
 To use the latest development version, you can install reflect from
 GitHub:
