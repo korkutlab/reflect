@@ -13,6 +13,10 @@ REFLECT identifies co-actionable, co-occurring oncogenic alterations
 that are recurrent within patient cohorts using genomic, transcriptomic
 and phosphoproteomic data.
 
+The REFLECT website (<https://bioinformatics.mdanderson.org/reflect/>)
+provides co-occurrence analyses of \~200 patient cohorts each identified
+by a potentially actionable aberration.
+
 The reflect package provides a set of functions that runs the reflect
 pipeline:
 
