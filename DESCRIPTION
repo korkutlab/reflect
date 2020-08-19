@@ -1,13 +1,15 @@
 Package: reflect
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: REcurrent Features LEveraged for Combination Therapy
+Version: 1.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
-           role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    c(person("Xubin", 
+             "Li",
+             role = c("aut", "cre"),
+             email = "xli27@mdanderson.org"),
+      person("Anil", 
+             "Korkut",
+             role = c("aut", "cph")))
+Description: REFLECT is a scalable and user-friendly bioinformatics tool to accelerate drug discovery and clinical translation that will result in real patient benefit. REFLECT identifies co-actionable, co-occurring oncogenic alterations that are recurrent within patient cohorts. REFLECT aims to enable researchers and clinicians to develop more effective targeted therapy combinations and better select benefiting patient cohorts in preclinical and clinical settings. The reflect package provides a set of functions that runs the reflect pipeline and visualize results from reflect analyses.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to
     pick a license
 Encoding: UTF-8
