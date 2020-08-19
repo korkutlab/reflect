@@ -5,13 +5,7 @@
 
 ## Overview
 
-REFLECT (REcurrent Features LEveraged for Combination Therapy) is to
-accelerate discovery of combination therapies tailored to multi-omic
-profiles of cancer patient cohorts with matching oncogenic features.
-
-REFLECT identifies co-actionable, co-occurring oncogenic alterations
-that are recurrent within patient cohorts using genomic, transcriptomic
-and phosphoproteomic data.
+REFLECT (REcurrent Features LEveraged for Combination Therapy) is a scalable and user-friendly bioinformatics tool to accelerate drug discovery and clinical translation that will result in real patient benefit. REFLECT identifies co-actionable, co-occurring oncogenic alterations that are recurrent within patient cohorts. REFLECT aims to enable researchers and clinicians to develop more effective targeted therapy combinations and better select benefiting patient cohorts in preclinical and clinical settings.
 
 The REFLECT website (<https://bioinformatics.mdanderson.org/reflect/>)
 provides co-occurrence analyses of \~200 patient cohorts each identified
