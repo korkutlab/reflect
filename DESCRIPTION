@@ -9,7 +9,7 @@ Authors@R:
       person("Anil", 
              "Korkut",
              role = c("aut", "cph")))
-Description: REFLECT is a scalable and user-friendly bioinformatics tool to accelerate drug discovery and clinical translation that will result in real patient benefit. REFLECT identifies co-actionable, co-occurring oncogenic alterations that are recurrent within patient cohorts. REFLECT aims to enable researchers and clinicians to develop more effective targeted therapy combinations and better select benefiting patient cohorts in preclinical and clinical settings. The reflect package provides a set of functions that runs the reflect pipeline and visualize results from reflect analyses.
+Description: REFLECT is a bioinformatics tool to accelerate drug discovery and clinical translation that will result in real patient benefit. REFLECT identifies co-actionable, co-occurring oncogenic alterations that are recurrent within patient cohorts. REFLECT aims to enable researchers and clinicians to develop more effective targeted therapy combinations and better select benefiting patient cohorts in preclinical and clinical settings. The reflect package provides a set of functions that runs the reflect pipeline and visualize results from reflect analyses.
 License: Apache License, Version 2.0
 Encoding: UTF-8
 LazyData: true
